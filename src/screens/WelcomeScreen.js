@@ -8,12 +8,12 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
-  ScrollView,
   Animated,
 } from 'react-native';
 import { db } from '../firebaseConfig';
 import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import ColumbusSection from './ColumbusSection';
 
 const WelcomeScreen = () => {
   const [vacancies, setVacancies] = useState([]);
@@ -25,34 +25,43 @@ const WelcomeScreen = () => {
   const auth = getAuth();
 
   useEffect(() => {
-    const fetchVacancies = async () => {
+    const fetchData = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'vacancies'));
-        const fetchedVacancies = querySnapshot.docs.map((doc) => ({
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // Загрузка вакансий
+        const vacanciesSnapshot = await getDocs(collection(db, 'vacancies'));
+        const fetchedVacancies = vacanciesSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          type: 'vacancy',
         }));
         setVacancies(fetchedVacancies);
-      } catch (error) {
-        console.error('Ошибка загрузки вакансий:', error);
-      }
-    };
 
-    const fetchNews = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'news'));
-        const fetchedNews = querySnapshot.docs.map((doc) => ({
+        // Загрузка новостей
+        const newsSnapshot = await getDocs(collection(db, 'news'));
+        const fetchedNews = newsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          type: 'news',
         }));
         setNews(fetchedNews);
+
+        // Проверка откликов
+        const applicationsSnapshot = await getDocs(
+          query(collection(db, 'applications'), where('userId', '==', user.uid))
+        );
+        const appliedVacancyIds = new Set(
+          applicationsSnapshot.docs.map((doc) => doc.data().vacancyId)
+        );
+        setAppliedVacancies(appliedVacancyIds);
       } catch (error) {
-        console.error('Ошибка загрузки новостей:', error);
+        console.error('Ошибка загрузки данных:', error);
       }
     };
 
-    fetchVacancies();
-    fetchNews();
+    fetchData();
   }, []);
 
   const applyForVacancy = async (vacancyId) => {
@@ -92,6 +101,7 @@ const WelcomeScreen = () => {
   };
 
   const handleOpenModal = (vacancy) => {
+    console.log('Opening modal for:', vacancy);
     setSelectedVacancy(vacancy);
     setModalVisible(true);
     Animated.timing(modalAnimation, {
@@ -102,6 +112,7 @@ const WelcomeScreen = () => {
   };
 
   const handleCloseModal = () => {
+    console.log('Closing modal');
     Animated.timing(modalAnimation, {
       toValue: 0,
       duration: 300,
@@ -117,10 +128,8 @@ const WelcomeScreen = () => {
           source={{ uri: item.image || 'https://via.placeholder.com/150' }}
           style={styles.cardImage}
         />
-        <ScrollView style={styles.cardContent} nestedScrollEnabled>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text style={styles.cardDescription}>{item.description}</Text>
-        </ScrollView>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardDescription}>{item.description}</Text>
         <TouchableOpacity
           style={[styles.button, isApplied && styles.buttonDisabled]}
           onPress={() => !isApplied && applyForVacancy(item.id)}
@@ -135,39 +144,46 @@ const WelcomeScreen = () => {
   };
 
   const renderNews = ({ item }) => (
-    <View style={styles.card}>
+    <View style={styles.newsCard}>
       <Image
         source={{ uri: item.image || 'https://via.placeholder.com/150' }}
         style={styles.cardImage}
       />
-      <ScrollView style={styles.cardContent} nestedScrollEnabled>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardDescription}>{item.description}</Text>
-      </ScrollView>
+      <Text style={styles.cardTitle}>{item.title}</Text>
+      <Text style={styles.cardDescription}>{item.description}</Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Добро пожаловать!</Text>
-      <Text style={styles.sectionTitle}>Новости</Text>
+    <>
       <FlatList
-        data={news}
-        renderItem={renderNews}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
+        data={[...news, { id: 'vacancy-header', type: 'vacancyHeader' }, ...vacancies]}
+        renderItem={({ item }) => {
+          if (item.type === 'vacancyHeader') {
+            return <Text style={styles.sectionTitle}>Вакансии</Text>;
+          }
+          return item.type === 'vacancy'
+            ? renderVacancy({ item })
+            : renderNews({ item });
+        }}
+        keyExtractor={(item, index) => `${item.type}-${item.id || index}`}
+        ListHeaderComponent={() => (
+          <View>
+            <Text style={styles.header}>Добро пожаловать!</Text>
+            <Text style={styles.sectionTitle}>Новости</Text>
+          </View>
+        )}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListFooterComponent={() => (
+          <View>
+            <Text style={styles.sectionTitle}>COLUMBUS WORK TRAVEL ЭТО -</Text>
+            <ColumbusSection />
+          </View>
+        )}
         contentContainerStyle={styles.listContainer}
       />
-      <Text style={styles.sectionTitle}>Вакансии</Text>
-      <FlatList
-        data={vacancies}
-        renderItem={renderVacancy}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
+
+      {/* Модальное окно */}
       {modalVisible && (
         <Modal transparent>
           <Animated.View style={[styles.modal, { opacity: modalAnimation }]}>
@@ -175,11 +191,11 @@ const WelcomeScreen = () => {
               {selectedVacancy && (
                 <>
                   <Image
-                    source={{ uri: selectedVacancy.image }}
+                    source={{ uri: selectedVacancy.image || 'https://via.placeholder.com/150' }}
                     style={styles.modalImage}
                   />
                   <Text style={styles.modalTitle}>{selectedVacancy.title}</Text>
-                  <Text style={styles.modalDescription}>{selectedVacancy.details}</Text>
+                  <Text style={styles.modalDescription}>{selectedVacancy.description}</Text>
                 </>
               )}
               <TouchableOpacity style={styles.button} onPress={handleCloseModal}>
@@ -189,28 +205,111 @@ const WelcomeScreen = () => {
           </Animated.View>
         </Modal>
       )}
-    </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-  header: { fontSize: 28, fontWeight: '700', marginBottom: 16, color: '#34495E', textAlign: 'center' },
-  sectionTitle: { fontSize: 22, fontWeight: '600', marginBottom: 12, color: '#34495E' },
-  listContainer: { gap: 24 }, // Increased gap between cards
-  card: { width: 280, backgroundColor: '#f9f9f9', borderRadius: 12, padding: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
-  cardImage: { width: '100%', height: 150, borderRadius: 8, marginBottom: 8 },
-  cardContent: { maxHeight: 120, marginBottom: 8 }, // Scrollable content area
-  cardTitle: { fontSize: 18, fontWeight: '600', marginBottom: 8, color: '#34495E' },
-  cardDescription: { fontSize: 14, color: '#7f8c8d' },
-  button: { backgroundColor: '#3498db', padding: 10, borderRadius: 8, alignItems: 'center' },
-  buttonDisabled: { backgroundColor: '#bdc3c7' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  modal: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#fff', padding: 20, borderRadius: 8, alignItems: 'center', width: '90%' },
-  modalImage: { width: '100%', height: 200, borderRadius: 8, marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 8, color: '#34495E' },
-  modalDescription: { fontSize: 16, color: '#7f8c8d', marginBottom: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 16,
+    color: '#34495E',
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginVertical: 12,
+    color: '#34495E',
+    paddingHorizontal: 16,
+  },
+  card: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    marginHorizontal: 12,
+  },
+  newsCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    marginHorizontal: 12,
+  },
+  cardImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#34495E',
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 8,
+  },
+  button: {
+    backgroundColor: '#3498db',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#bdc3c7',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modal: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '90%',
+  },
+  modalImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    color: '#34495E',
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    marginBottom: 16,
+  },
+  listContainer: {
+    paddingBottom: 16,
+  },
+  separator: {
+    height: 16,
+  },
 });
 
 export default WelcomeScreen;
