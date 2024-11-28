@@ -39,15 +39,16 @@ const ColumbusCards = [
   },
 ];
 
-const renderCard = ({ item }) => (
-  <View style={styles.card}>
-    {/* Изображение растягивается по ширине карточки */}
-    <Image source={item.image} style={styles.cardImage} />
-    {/* Заголовок и текст выравнены по левому краю */}
-    <Text style={styles.cardTitle}>{item.title}</Text>
-    <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-  </View>
-);
+const renderCard = ({ item }) => {
+  console.log('Rendering Columbus card:', item);
+  return (
+    <View style={styles.card}>
+      <Image source={item.image} style={styles.cardImage} />
+      <Text style={styles.cardTitle}>{item.title}</Text>
+      <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+    </View>
+  );
+};
 
 const ColumbusSection = () => {
   return (

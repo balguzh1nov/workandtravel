@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDyo5s3mAmSzMtoahKAQd0SWEDRw1XV3Vc",
   authDomain: "workandtravel-8951a.firebaseapp.com",
   projectId: "workandtravel-8951a",
-  storageBucket: "workandtravel-8951a.appspot.com", // Исправлено
+  storageBucket: "workandtravel-8951a.appspot.com",
   messagingSenderId: "198555043035",
   appId: "1:198555043035:web:e6648d331bd035c22f38fe",
   measurementId: "G-GVKE4HS1DQ",

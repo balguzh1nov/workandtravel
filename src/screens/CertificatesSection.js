@@ -13,14 +13,15 @@ const CertificatesSection = () => {
 
   // Рендеринг одной фотографии
   const renderItem = ({ item }) => {
-    if (typeof item !== 'number') return null; // Проверяем, что item — корректный
+    console.log('Rendering certificate item:', item);
+    if (typeof item !== 'number') return null;
     return (
       <View style={styles.imageContainer}>
         <Image source={item} style={styles.image} />
       </View>
     );
   };
-
+  
   return (
     <View style={styles.container}>
       {/* Заголовок */}

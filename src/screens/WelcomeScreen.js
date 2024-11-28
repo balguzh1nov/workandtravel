@@ -48,6 +48,7 @@ const WelcomeScreen = () => {
           ...doc.data(),
           type: 'news',
         }));
+        console.log('Fetched news:', fetchedNews);
         setNews(fetchedNews);
 
         // Проверка откликов
@@ -103,7 +104,7 @@ const WelcomeScreen = () => {
   };
 
   const handleOpenModal = (vacancy) => {
-    console.log('Opening modal for:', vacancy);
+    console.log('Opening modal with vacancy:', vacancy);
     setSelectedVacancy(vacancy);
     setModalVisible(true);
     Animated.timing(modalAnimation, {
@@ -111,7 +112,7 @@ const WelcomeScreen = () => {
       duration: 300,
       useNativeDriver: true,
     }).start();
-  };
+  };  
 
   const handleCloseModal = () => {
     console.log('Closing modal');
@@ -123,15 +124,18 @@ const WelcomeScreen = () => {
   };
 
   const renderVacancy = ({ item }) => {
+    console.log('Rendering vacancy item:', item);
     const isApplied = appliedVacancies.has(item.id);
     return (
       <TouchableOpacity style={styles.card} onPress={() => handleOpenModal(item)}>
-        <Image
-          source={{ uri: item.image || 'https://via.placeholder.com/150' }}
-          style={styles.cardImage}
-        />
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardDescription}>{item.description}</Text>
+        {item.image && (
+          <Image
+            source={{ uri: item.image || 'https://via.placeholder.com/150' }}
+            style={styles.cardImage}
+          />
+        )}
+        <Text style={styles.cardTitle}>{item.title || 'Без названия'}</Text>
+        <Text style={styles.cardDescription}>{item.description || 'Описание отсутствует'}</Text>
         <TouchableOpacity
           style={[styles.button, isApplied && styles.buttonDisabled]}
           onPress={() => !isApplied && applyForVacancy(item.id)}
@@ -143,37 +147,49 @@ const WelcomeScreen = () => {
         </TouchableOpacity>
       </TouchableOpacity>
     );
-  };
+  };  
 
   const renderNews = ({ item }) => (
     <View style={styles.newsCard}>
-      <Image
-        source={{ uri: item.image || 'https://via.placeholder.com/150' }}
-        style={styles.cardImage}
-      />
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardDescription}>{item.description}</Text>
+      {item.image && (
+        <Image
+          source={{ uri: item.image || 'https://via.placeholder.com/150' }}
+          style={styles.cardImage}
+        />
+      )}
+      <Text style={styles.cardTitle}>{item.title || 'Без названия'}</Text>
+      <Text style={styles.cardDescription}>{item.description || 'Описание отсутствует'}</Text>
     </View>
   );
-
+  
   return (
     <>
+      {console.log('FlatList data:', [...news, { id: 'vacancy-header', type: 'vacancyHeader' }, ...vacancies])}
       <FlatList
       data={[...news, { id: 'vacancy-header', type: 'vacancyHeader' }, ...vacancies]}
       renderItem={({ item }) => {
-        if (item.type === 'vacancyHeader') {
-          return <Text style={styles.sectionTitle}>Вакансии</Text>;
+        try {
+          if (item.type === 'vacancyHeader') {
+            return <Text style={styles.sectionTitle}>Вакансии</Text>;
+          }
+          if (item.type === 'vacancy') {
+            return renderVacancy({ item });
+          }
+          if (item.type === 'news') {
+            return renderNews({ item });
+          }
+        } catch (error) {
+          console.error('Error rendering item:', error, item);
         }
-        return item.type === 'vacancy'
-          ? renderVacancy({ item })
-          : renderNews({ item });
+        return null;
       }}
       keyExtractor={(item, index) => `${item.type}-${item.id || index}`}
       ListHeaderComponent={() => (
-        <View>
-          <IntroSection /> {/* Новый компонент */}
-          <Text style={styles.sectionTitle}>Координаторы делятся своим опытом</Text>
-        </View>
+      <View>
+        {console.log('Rendering ListHeaderComponent')}
+        <IntroSection />
+        <Text style={styles.sectionTitle}>Координаторы делятся своим опытом</Text>
+      </View>
       )}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       ListFooterComponent={() => (

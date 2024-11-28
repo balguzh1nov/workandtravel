@@ -7,8 +7,8 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
-import ApplicationScreen from './src/screens/ApplicationScreen'; // Новый экран
-import ProfileScreen from './src/screens/ProfileScreen'; // Новый экран
+import ApplicationScreen from './src/screens/ApplicationScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
