@@ -14,6 +14,8 @@ import { db } from '../firebaseConfig';
 import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import ColumbusSection from './ColumbusSection';
+import IntroSection from './IntroSection';
+import CertificatesSection from './CertificatesSection';
 
 const WelcomeScreen = () => {
   const [vacancies, setVacancies] = useState([]);
@@ -157,31 +159,32 @@ const WelcomeScreen = () => {
   return (
     <>
       <FlatList
-        data={[...news, { id: 'vacancy-header', type: 'vacancyHeader' }, ...vacancies]}
-        renderItem={({ item }) => {
-          if (item.type === 'vacancyHeader') {
-            return <Text style={styles.sectionTitle}>Вакансии</Text>;
-          }
-          return item.type === 'vacancy'
-            ? renderVacancy({ item })
-            : renderNews({ item });
-        }}
-        keyExtractor={(item, index) => `${item.type}-${item.id || index}`}
-        ListHeaderComponent={() => (
-          <View>
-            <Text style={styles.header}>Добро пожаловать!</Text>
-            <Text style={styles.sectionTitle}>Новости</Text>
-          </View>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListFooterComponent={() => (
-          <View>
-            <Text style={styles.sectionTitle}>COLUMBUS WORK TRAVEL ЭТО -</Text>
-            <ColumbusSection />
-          </View>
-        )}
-        contentContainerStyle={styles.listContainer}
-      />
+      data={[...news, { id: 'vacancy-header', type: 'vacancyHeader' }, ...vacancies]}
+      renderItem={({ item }) => {
+        if (item.type === 'vacancyHeader') {
+          return <Text style={styles.sectionTitle}>Вакансии</Text>;
+        }
+        return item.type === 'vacancy'
+          ? renderVacancy({ item })
+          : renderNews({ item });
+      }}
+      keyExtractor={(item, index) => `${item.type}-${item.id || index}`}
+      ListHeaderComponent={() => (
+        <View>
+          <IntroSection /> {/* Новый компонент */}
+          <Text style={styles.sectionTitle}>Координаторы делятся своим опытом</Text>
+        </View>
+      )}
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ListFooterComponent={() => (
+        <View>
+          <Text style={styles.sectionTitle}>COLUMBUS WORK TRAVEL ЭТО -</Text>
+          <ColumbusSection />
+          <CertificatesSection />
+        </View>
+      )}
+      contentContainerStyle={styles.listContainer}
+    />
 
       {/* Модальное окно */}
       {modalVisible && (
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    height: 150,
+    height: 250,
     borderRadius: 8,
     marginBottom: 8,
   },

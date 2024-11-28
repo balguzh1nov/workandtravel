@@ -6,31 +6,36 @@ const ColumbusCards = [
     id: '1',
     title: '12 ЛЕТ',
     subtitle: 'Мы занимаемся оформлением и отправкой студентов по программе Work and Travel USA',
-    image: require('../../assets/img1.png'), // Ваш путь к файлу
+    image: require('../../assets/img2.png'), // Ваш путь к файлу
   },
   {
     id: '2',
-    title: 'КАЧЕСТВО',
-    subtitle: 'Лучшие условия и поддержка студентов на каждом этапе программы.',
+    title: '80',
+    subtitle: 'Работодателей из 50 штатов США, из которых можно выбрать, где хочешь работать или жить',
     image: require('../../assets/img1.png'),
   },
   {
     id: '3',
-    title: 'ОПЫТ',
-    subtitle: 'Тысячи успешных историй студентов по всему миру.',
-    image: require('../../assets/img1.png'),
+    title: '5',
+    subtitle: 'Собственных офисов в Казахстане для того, чтобы каждый студент мог получить возможность участия в программе Work and Travel USA',
+    image: require('../../assets/img3.png'),
   },
   {
     id: '4',
-    title: 'СЕРТИФИКАТЫ',
-    subtitle: 'Официально аккредитованный партнер программы Work and Travel.',
-    image: require('../../assets/img1.png'),
+    title: '15',
+    subtitle: 'Сотрудников, которые сами ежегодно пользуются этой программой и могут рассказать о своем опыте путешествий и международной стажировки',
+    image: require('../../assets/img4.png'),
   },
   {
     id: '5',
-    title: 'ПОДДЕРЖКА',
-    subtitle: 'Мы на связи 24/7 для ваших вопросов и помощи.',
-    image: require('../../assets/img1.png'),
+    title: '4.9',
+    subtitle: 'Средний рейтинг оценок на 2ГИС',
+    image: require('../../assets/img5.png'),
+  },{
+    id: '6',
+    title: '24 / 7',
+    subtitle: 'Поддержка на территории США и Казахстана нашими координаторами',
+    image: require('../../assets/img6.png'),
   },
 ];
 
